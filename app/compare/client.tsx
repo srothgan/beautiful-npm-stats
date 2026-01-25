@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Loader2, ArrowRight, Terminal, X } from "lucide-react"
+import { Plus, Loader2, ArrowRight, Terminal, X, TrendingUp, Star, Wrench } from "lucide-react"
 import { parseAsArrayOf, parseAsIsoDate, parseAsString, useQueryStates } from "nuqs"
 import {
   Command,
@@ -20,13 +20,8 @@ import { DateRangePicker } from "@/components/date-range-picker"
 import { DEBOUNCE_MS, MAX_COMPARE_PACKAGES, CHART_COLORS } from "@/lib/constants"
 import { StatsCard } from "@/components/stats-card"
 import { cn } from "@/lib/utils"
+import { searchNpmPackages, type SearchResult } from "@/app/actions/fetch-stats"
 import type { PackageStats } from "@/types/npm"
-
-interface SearchResult {
-  name: string
-  description?: string
-  version: string
-}
 
 interface ComparePageClientProps {
   initialPackages: string[]
@@ -56,7 +51,7 @@ export function ComparePageClient({
     }
   )
 
-  const searchPackages = React.useCallback(async (searchQuery: string) => {
+  const doSearch = React.useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([])
       return
@@ -64,19 +59,8 @@ export function ComparePageClient({
 
     setIsLoading(true)
     try {
-      const response = await fetch(
-        `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(searchQuery)}&size=8`
-      )
-      if (response.ok) {
-        const data = await response.json()
-        setResults(
-          data.objects.map((obj: { package: SearchResult }) => ({
-            name: obj.package.name,
-            description: obj.package.description,
-            version: obj.package.version,
-          }))
-        )
-      }
+      const searchResults = await searchNpmPackages(searchQuery)
+      setResults(searchResults)
     } catch (error) {
       console.error("Search failed:", error)
     } finally {
@@ -90,7 +74,7 @@ export function ComparePageClient({
     }
 
     debounceRef.current = setTimeout(() => {
-      searchPackages(query)
+      doSearch(query)
     }, DEBOUNCE_MS)
 
     return () => {
@@ -98,7 +82,13 @@ export function ComparePageClient({
         clearTimeout(debounceRef.current)
       }
     }
-  }, [query, searchPackages])
+  }, [query, doSearch])
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-500"
+    if (score >= 60) return "text-yellow-500"
+    return "text-muted-foreground"
+  }
 
   const addPackage = (packageName: string) => {
     if (packages.length < MAX_COMPARE_PACKAGES && !packages.includes(packageName)) {
@@ -194,25 +184,57 @@ export function ComparePageClient({
                             onSelect={() => addPackage(pkg.name)}
                             className="group/item flex items-start gap-3 px-4 py-3 cursor-pointer data-[selected=true]:bg-accent/10"
                           >
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/50 font-mono text-xs text-muted-foreground group-data-[selected=true]/item:bg-accent/20 group-data-[selected=true]/item:text-accent">
+                            <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/50 font-mono text-xs text-muted-foreground group-data-[selected=true]/item:bg-accent/20 group-data-[selected=true]/item:text-accent">
                               {index + 1}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-foreground truncate">
-                                  {pkg.name}
-                                </span>
-                                <span className="text-xs font-mono text-muted-foreground">
-                                  v{pkg.version}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="font-semibold text-foreground truncate">
+                                    {pkg.name}
+                                  </span>
+                                  <span className="text-xs font-mono text-muted-foreground shrink-0">
+                                    v{pkg.version}
+                                  </span>
+                                </div>
+                                {/* Overall score badge - always visible */}
+                                <span className={cn(
+                                  "text-xs font-mono px-1.5 py-0.5 rounded shrink-0",
+                                  pkg.score.final >= 80 ? "bg-green-500/10 text-green-500" :
+                                  pkg.score.final >= 60 ? "bg-yellow-500/10 text-yellow-500" :
+                                  "bg-muted text-muted-foreground"
+                                )}>
+                                  {pkg.score.final}
                                 </span>
                               </div>
                               {pkg.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                <p className="text-xs text-muted-foreground line-clamp-1">
                                   {pkg.description}
                                 </p>
                               )}
+                              {/* Detailed scores - hidden on mobile */}
+                              <div className="hidden sm:flex items-center gap-3">
+                                <div className="flex items-center gap-1" title="Popularity">
+                                  <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                                  <span className={cn("text-xs font-mono", getScoreColor(pkg.score.popularity))}>
+                                    {pkg.score.popularity}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1" title="Quality">
+                                  <Star className="h-3 w-3 text-muted-foreground" />
+                                  <span className={cn("text-xs font-mono", getScoreColor(pkg.score.quality))}>
+                                    {pkg.score.quality}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1" title="Maintenance">
+                                  <Wrench className="h-3 w-3 text-muted-foreground" />
+                                  <span className={cn("text-xs font-mono", getScoreColor(pkg.score.maintenance))}>
+                                    {pkg.score.maintenance}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-data-[selected=true]/item:opacity-100 group-data-[selected=true]/item:text-accent transition-opacity" />
+                            <ArrowRight className="hidden sm:block h-4 w-4 text-muted-foreground opacity-0 group-data-[selected=true]/item:opacity-100 group-data-[selected=true]/item:text-accent transition-opacity" />
                           </CommandItem>
                         ))}
                     </CommandGroup>

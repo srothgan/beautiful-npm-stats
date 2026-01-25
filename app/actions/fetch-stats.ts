@@ -67,6 +67,13 @@ export type SearchResult = {
   name: string
   description?: string
   version: string
+  score: {
+    final: number
+    quality: number
+    popularity: number
+    maintenance: number
+  }
+  searchScore: number
 }
 
 export async function searchNpmPackages(
@@ -77,12 +84,21 @@ export async function searchNpmPackages(
   }
 
   try {
-    const results = await searchPackages(query, 8)
-    return results.objects.map((obj) => ({
-      name: obj.package.name,
-      description: obj.package.description,
-      version: obj.package.version,
-    }))
+    const results = await searchPackages(query, 10)
+    return results.objects
+      .map((obj) => ({
+        name: obj.package.name,
+        description: obj.package.description,
+        version: obj.package.version,
+        score: {
+          final: Math.round(obj.score.final * 100),
+          quality: Math.round(obj.score.detail.quality * 100),
+          popularity: Math.round(obj.score.detail.popularity * 100),
+          maintenance: Math.round(obj.score.detail.maintenance * 100),
+        },
+        searchScore: obj.searchScore,
+      }))
+      .sort((a, b) => b.searchScore - a.searchScore)
   } catch {
     return []
   }

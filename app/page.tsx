@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 lg:py-40 overflow-hidden">
+      <section className="relative py-24 md:py-32 lg:py-40 overflow-visible">
         <div className="container mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-center text-center">
             {/* Terminal-style badge */}
@@ -35,7 +35,7 @@ export default function HomePage() {
             </p>
 
             {/* Search */}
-            <div className="animate-fade-up stagger-4 mt-12 w-full max-w-xl">
+            <div className="animate-fade-up stagger-4 mt-12 w-full max-w-xl relative z-10">
               <SearchInput
                 size="lg"
                 className="w-full"
@@ -44,7 +44,7 @@ export default function HomePage() {
             </div>
 
             {/* Quick examples */}
-            <div className="animate-fade-up stagger-5 mt-6 flex flex-wrap items-center justify-center gap-2">
+            <div className="animate-fade-up stagger-5 mt-6 flex flex-wrap items-center justify-center gap-2 relative z-0">
               <span className="text-sm text-muted-foreground font-mono">
                 <span className="text-primary">$</span> try:
               </span>
