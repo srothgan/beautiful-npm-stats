@@ -1,4 +1,4 @@
-import { ExternalLink, Github, Terminal, Zap, Database, Code2 } from "lucide-react"
+import { Github, Terminal, Zap, Database, Code2 } from "lucide-react"
 import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -49,25 +49,76 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Data source */}
+        {/* Data sources */}
         <section className="animate-fade-up stagger-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
             <Database className="h-5 w-5 text-accent" />
-            Data Source
+            Data Sources
           </h2>
-          <div className="p-6 rounded-2xl bg-card/50 border border-border/50">
+          <div className="p-6 rounded-2xl bg-card/50 border border-border/50 space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              All download data comes directly from the{" "}
-              <Link
-                href="https://github.com/npm/registry/blob/master/docs/download-counts.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
-              >
-                npm registry API
-              </Link>
-              . Download counts are updated approximately every 24-48 hours.
-              Data is cached for 1 hour to improve performance.
+              We aggregate data from multiple sources to provide comprehensive package insights:
+            </p>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-mono">•</span>
+                <span>
+                  <Link
+                    href="https://github.com/npm/registry/blob/master/docs/download-counts.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
+                  >
+                    npm Registry API
+                  </Link>
+                  {" "}— download statistics, package metadata, version info, and dependencies
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-mono">•</span>
+                <span>
+                  <Link
+                    href="https://docs.github.com/en/rest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
+                  >
+                    GitHub API
+                  </Link>
+                  {" "}— repository stars, forks, issues, and top contributors
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-mono">•</span>
+                <span>
+                  <Link
+                    href="https://bundlephobia.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
+                  >
+                    Bundlephobia
+                  </Link>
+                  {" "}— bundle size and gzip analysis
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-mono">•</span>
+                <span>
+                  <Link
+                    href="https://npms.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
+                  >
+                    npms.io
+                  </Link>
+                  {" "}— quality, popularity, and maintenance scores
+                </span>
+              </li>
+            </ul>
+            <p className="text-xs text-muted-foreground/70 pt-2">
+              Data is cached between 1-24 hours depending on the source.
             </p>
           </div>
         </section>
@@ -112,22 +163,12 @@ export default function AboutPage() {
         <section className="animate-fade-up stagger-5 flex flex-wrap gap-3 pt-4">
           <Button variant="outline" asChild className="gap-2">
             <Link
-              href="https://github.com"
+              href="https://github.com/srothgan/beautiful-npm-stats"
               target="_blank"
               rel="noopener noreferrer"
             >
               <Github className="h-4 w-4" />
-              GitHub
-            </Link>
-          </Button>
-          <Button variant="outline" asChild className="gap-2">
-            <Link
-              href="https://www.npmjs.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4" />
-              npm Registry
+              View on GitHub
             </Link>
           </Button>
         </section>

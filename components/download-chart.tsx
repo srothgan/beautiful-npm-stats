@@ -454,7 +454,7 @@ export function DownloadChart({
         {/* Chart */}
         <div className="relative">
           <div ref={scrollRef} className="p-4 sm:p-6 pt-4 overflow-x-auto scrollbar-none">
-            <div className="h-80 min-w-[500px]">
+            <div className="h-80 min-w-125">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
@@ -562,7 +562,7 @@ export function DownloadChart({
             </ResponsiveContainer>
             </div>
           </div>
-          
+
           {/* Scroll buttons - mobile only, at bottom */}
           {(canScrollLeft || canScrollRight) && (
             <div className="flex items-center justify-center gap-2 py-2 sm:hidden">
