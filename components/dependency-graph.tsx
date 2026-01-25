@@ -91,7 +91,7 @@ function DependencyNodeComponent({ data }: { data: { label: string; version: str
 
       <div className="flex items-center gap-2 mb-1">
         <Package className={cn("h-3.5 w-3.5 shrink-0", isRoot ? "text-primary" : "text-zinc-600 dark:text-zinc-200")} />
-        <span className={cn("font-mono font-bold text-xs wrap-break-word leading-tight", isRoot ? "text-primary" : "text-zinc-800 dark:text-white")}>
+        <span className={cn("font-mono font-bold text-xs leading-tight break-all overflow-hidden", isRoot ? "text-primary" : "text-zinc-800 dark:text-white")}>
           {label}
         </span>
       </div>
