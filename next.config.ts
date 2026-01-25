@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Allow local network devices to access dev server (e.g., testing on mobile)
+  // Set DEV_ORIGIN in .env.local to your local IP (e.g., "192.168.0.100")
+  allowedDevOrigins: process.env.DEV_ORIGIN ? [process.env.DEV_ORIGIN] : [],
   images: {
     remotePatterns: [
       {

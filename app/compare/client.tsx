@@ -155,7 +155,7 @@ export function ComparePageClient({
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-100 p-0 border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl"
+              className="w-[calc(100vw-2rem)] sm:w-100 max-w-100 p-0 border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl"
               align="start"
             >
               <Command shouldFilter={false} className="bg-transparent">
@@ -255,7 +255,7 @@ export function CompareStatsCards({ stats, dateRange }: CompareStatsCardsProps) 
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {stats.map((pkgStats, index) => (
         <div
           key={pkgStats.packageName}

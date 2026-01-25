@@ -12,7 +12,7 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import Link from "next/link"
-import { ExternalLink, Package, GitBranch } from "lucide-react"
+import { ExternalLink, Package, GitBranch, MoveHorizontal, X } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import type { DependencyNode, DependencyTreeResult } from "@/types/npm"
@@ -307,10 +307,11 @@ export function DependencyGraph({ dependencyTree, packageName, className }: Depe
 
   const directDeps = dependencyTree.root.dependencies?.length || 0
   const uniquePackages = nodes.length
+  const [showHint, setShowHint] = useState(true)
 
-  // Get container width for centering
+  // Get container width for centering - start with 0 to delay render until measured
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(1100)
+  const [containerWidth, setContainerWidth] = useState(0)
 
   useEffect(() => {
     if (containerRef.current) {
@@ -330,8 +331,8 @@ export function DependencyGraph({ dependencyTree, packageName, className }: Depe
   return (
     <div className={cn("rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden", className)}>
       {/* Header */}
-      <div className="p-6 border-b border-border/50">
-        <div className="flex items-start justify-between">
+      <div className="p-4 sm:p-6 border-b border-border/50">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h3 className="font-semibold text-lg mb-1 flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-primary" />
@@ -342,7 +343,7 @@ export function DependencyGraph({ dependencyTree, packageName, className }: Depe
               {uniquePackages - 1} unique packages
             </p>
           </div>
-          <div className="flex items-center gap-3 text-xs text-foreground/70">
+          <div className="flex flex-row flex-wrap gap-3 text-xs text-foreground/70">
             <span className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-primary/20 border border-primary" />
               Root
@@ -360,8 +361,20 @@ export function DependencyGraph({ dependencyTree, packageName, className }: Depe
       </div>
 
       {/* Graph */}
-      <div ref={containerRef} className="h-125 w-full">
-        {directDeps > 0 ? (
+      <div ref={containerRef} className="relative h-80 sm:h-125 w-full">
+        {/* Pan/zoom hint - dismissable */}
+        {showHint && directDeps > 0 && (
+          <button
+            onClick={() => setShowHint(false)}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/90 border border-border/50 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10 shadow-lg"
+          >
+            <MoveHorizontal className="h-3.5 w-3.5" />
+            <span>Drag to pan, scroll to zoom</span>
+            <X className="h-3 w-3 ml-1 opacity-50" />
+          </button>
+        )}
+        
+        {directDeps > 0 && containerWidth > 0 ? (
           <ReactFlow
             nodes={nodes}
             edges={edges}

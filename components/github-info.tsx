@@ -64,7 +64,7 @@ export function GitHubInfo({ githubData, githubRepo, className }: GitHubInfoProp
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {stats.map((stat) => {
             const Icon = stat.icon
             return (
@@ -72,10 +72,10 @@ export function GitHubInfo({ githubData, githubRepo, className }: GitHubInfoProp
                 key={stat.label}
                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30"
               >
-                <div className={cn("flex h-8 w-8 items-center justify-center rounded-md bg-muted/50", stat.color)}>
+                <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/50", stat.color)}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                   <p className="font-mono font-bold text-lg">{stat.value}</p>
                 </div>

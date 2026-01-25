@@ -57,9 +57,9 @@ export function VersionStats({ versions, latestVersion, className }: VersionStat
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent" />
 
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border/50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <Layers className="h-5 w-5" />
           </div>
           <div>
@@ -71,7 +71,7 @@ export function VersionStats({ versions, latestVersion, className }: VersionStat
         </div>
         
         {/* Sort controls */}
-        <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-border/50 bg-muted/30">
+        <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-border/50 bg-muted/30 w-fit">
           <ArrowUpDown className="h-3 w-3 text-muted-foreground mr-1" />
           {(["downloads", "version"] as const).map((sort) => (
             <button

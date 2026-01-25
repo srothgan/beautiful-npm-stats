@@ -11,7 +11,7 @@ import {
   YAxis,
   ReferenceLine,
 } from "recharts"
-import { Activity, Download, Tag } from "lucide-react"
+import { Activity, Download, Tag, ChevronLeft, ChevronRight } from "lucide-react"
 import { toPng } from "html-to-image"
 import { useTheme } from "next-themes"
 import { formatNumber, formatChartDate, formatDate } from "@/lib/format"
@@ -190,6 +190,9 @@ export function DownloadChart({
   const [isExporting, setIsExporting] = React.useState(false)
   const [isMounted, setIsMounted] = React.useState(false)
   const exportRef = React.useRef<HTMLDivElement>(null)
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false)
+  const [canScrollRight, setCanScrollRight] = React.useState(false)
   const { theme, systemTheme } = useTheme()
   const currentTheme = theme === "system" ? systemTheme : theme
 
@@ -234,20 +237,59 @@ export function DownloadChart({
   )
 
   // Calculate appropriate tick count based on data length
+  // Show fewer ticks to prevent overlap on smaller screens
   const tickInterval = React.useMemo(() => {
     const len = chartData.length
-    if (len <= 14) return 0
-    if (len <= 30) return 2
-    if (len <= 60) return 4
-    if (len <= 90) return 6
-    if (len <= 180) return 14
-    return 29
+    if (len <= 7) return 0 // Show all ticks for a week
+    if (len <= 14) return 1 // Every other day for 2 weeks
+    if (len <= 30) return 4 // ~6 ticks for a month
+    if (len <= 60) return 9 // ~6 ticks for 2 months
+    if (len <= 90) return 14 // ~6 ticks for 3 months
+    if (len <= 180) return 29 // ~6 ticks for 6 months
+    return 59 // ~6 ticks for a year
   }, [chartData.length])
 
   const granularityLabels: Record<Granularity, string> = {
     daily: "Daily",
     weekly: "Weekly",
     monthly: "Monthly",
+  }
+
+  // Check scroll state
+  const updateScrollState = React.useCallback(() => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      setCanScrollLeft(scrollLeft > 0)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    updateScrollState()
+    const scrollEl = scrollRef.current
+    if (scrollEl) {
+      scrollEl.addEventListener('scroll', updateScrollState)
+      window.addEventListener('resize', updateScrollState)
+      return () => {
+        scrollEl.removeEventListener('scroll', updateScrollState)
+        window.removeEventListener('resize', updateScrollState)
+      }
+    }
+  }, [updateScrollState, chartData])
+
+  const scrollLeftFn = () => {
+    if (scrollRef.current) {
+      const newScrollLeft = Math.max(0, scrollRef.current.scrollLeft - 150)
+      scrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+    }
+  }
+
+  const scrollRightFn = () => {
+    if (scrollRef.current) {
+      const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth
+      const newScrollLeft = Math.min(maxScroll, scrollRef.current.scrollLeft + 150)
+      scrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+    }
   }
 
   const handleExport = async () => {
@@ -283,75 +325,38 @@ export function DownloadChart({
         <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent" />
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 p-6 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Activity className="h-5 w-5" />
+        <div className="flex flex-col gap-3 p-4 sm:p-6 border-b border-border/50">
+          {/* Row 1: Title + PNG (mobile) or Title + Granularity (desktop) */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold">{title}</h3>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {chartData.length} data points
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold">{title}</h3>
-              <p className="text-xs text-muted-foreground font-mono">
-                {chartData.length} data points
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {/* Version toggle and filter */}
-            {versionReleases.length > 0 && (
-              <>
-                <button
-                  onClick={() => setShowVersions(!showVersions)}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
-                    "border border-border/50",
-                    showVersions
-                      ? "bg-accent/20 border-accent/30 text-accent"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-border"
-                  )}
-                >
-                  <Tag className="h-3.5 w-3.5" />
-                  Versions
-                </button>
-
-                {showVersions && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-border/50 bg-muted/30">
-                    {["major", "minor", "all"].map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setReleaseFilter(filter as typeof releaseFilter)}
-                        className={cn(
-                          "px-2 py-0.5 text-xs font-medium rounded transition-all duration-200",
-                          releaseFilter === filter
-                            ? "bg-accent/20 text-accent"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Export button */}
+            {/* PNG button - mobile only */}
             <button
               onClick={handleExport}
               disabled={isExporting}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                "flex sm:hidden items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
                 "bg-muted/30 border border-border/50 text-muted-foreground",
                 "hover:bg-muted/50 hover:text-foreground hover:border-border",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
               <Download className="h-3.5 w-3.5" />
-              {isExporting ? "Exporting..." : "Export PNG"}
+              {isExporting ? "..." : "PNG"}
             </button>
 
-            {/* Granularity buttons */}
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/30 border border-border/50">
+            {/* Granularity buttons - desktop only in this row */}
+            <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-muted/30 border border-border/50">
               {availableGranularities.map((gran) => (
                 <button
                   key={gran}
@@ -368,11 +373,88 @@ export function DownloadChart({
               ))}
             </div>
           </div>
+
+          {/* Row 2: Granularity (mobile only) */}
+          <div className="flex sm:hidden items-center gap-1 p-1 rounded-lg bg-muted/30 border border-border/50 w-fit">
+            {availableGranularities.map((gran) => (
+              <button
+                key={gran}
+                onClick={() => setGranularity(gran)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                  granularity === gran
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {granularityLabels[gran]}
+              </button>
+            ))}
+          </div>
+
+          {/* Row 3: Versions + Export (desktop) or just Versions (mobile) */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Version toggle and filter */}
+              {versionReleases.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setShowVersions(!showVersions)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                      "border border-border/50",
+                      showVersions
+                        ? "bg-accent/20 border-accent/30 text-accent"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-border"
+                    )}
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    Versions
+                  </button>
+
+                  {showVersions && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-border/50 bg-muted/30">
+                      {["major", "minor", "all"].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setReleaseFilter(filter as typeof releaseFilter)}
+                          className={cn(
+                            "px-2 py-0.5 text-xs font-medium rounded transition-all duration-200",
+                            releaseFilter === filter
+                              ? "bg-accent/20 text-accent"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Export button - desktop only */}
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className={cn(
+                "hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                "bg-muted/30 border border-border/50 text-muted-foreground",
+                "hover:bg-muted/50 hover:text-foreground hover:border-border",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isExporting ? "Exporting..." : "Export PNG"}
+            </button>
+          </div>
         </div>
 
         {/* Chart */}
-        <div className="p-6 pt-4">
-          <div className="h-80 w-full">
+        <div className="relative">
+          <div ref={scrollRef} className="p-4 sm:p-6 pt-4 overflow-x-auto scrollbar-none">
+            <div className="h-80 min-w-[500px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
@@ -393,12 +475,14 @@ export function DownloadChart({
                 <XAxis
                   dataKey="formattedDate"
                   stroke="oklch(0.60 0.01 90)"
-                  fontSize={11}
+                  fontSize={10}
                   fontFamily="JetBrains Mono, monospace"
                   tickLine={false}
                   axisLine={false}
                   interval={tickInterval}
-                  dy={10}
+                  dy={5}
+                  tick={{ fontSize: 10 }}
+                  height={40}
                 />
                 <YAxis
                   stroke="oklch(0.60 0.01 90)"
@@ -476,7 +560,30 @@ export function DownloadChart({
                   })}
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           </div>
+          
+          {/* Scroll buttons - mobile only, at bottom */}
+          {(canScrollLeft || canScrollRight) && (
+            <div className="flex items-center justify-center gap-2 py-2 sm:hidden">
+              <button
+                onClick={scrollLeftFn}
+                disabled={!canScrollLeft}
+                className="flex items-center justify-center h-8 px-3 rounded-md bg-muted/90 border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={scrollRightFn}
+                disabled={!canScrollRight}
+                className="flex items-center justify-center h-8 px-3 rounded-md bg-muted/90 border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

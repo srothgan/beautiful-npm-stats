@@ -13,6 +13,21 @@ import {
 } from "@/components/ui/popover"
 import { DATE_PRESETS, MAX_DATE_RANGE_DAYS } from "@/lib/constants"
 
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = React.useState(false)
+
+  React.useEffect(() => {
+    const media = window.matchMedia(query)
+    setMatches(media.matches)
+
+    const listener = (e: MediaQueryListEvent) => setMatches(e.matches)
+    media.addEventListener("change", listener)
+    return () => media.removeEventListener("change", listener)
+  }, [query])
+
+  return matches
+}
+
 interface DateRangePickerProps {
   startDate: Date
   endDate: Date
@@ -27,6 +42,7 @@ export function DateRangePicker({
   className,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const isDesktop = useMediaQuery("(min-width: 640px)")
 
   const handlePresetClick = (days: number) => {
     // Use yesterday as end date since npm data isn't available for today
@@ -44,7 +60,7 @@ export function DateRangePicker({
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {/* Preset buttons */}
-      <div className="flex gap-1 p-1 rounded-lg bg-muted/30 border border-border/50">
+      <div className="flex flex-wrap gap-1 p-1 rounded-lg bg-muted/30 border border-border/50">
         {DATE_PRESETS.map((preset) => {
           const isActive =
             Math.abs(
@@ -57,7 +73,7 @@ export function DateRangePicker({
               key={preset.label}
               onClick={() => handlePresetClick(preset.days)}
               className={cn(
-                "px-3 py-1.5 text-sm font-mono font-medium rounded-md transition-all duration-200",
+                "px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-mono font-medium rounded-md transition-all duration-200",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -101,7 +117,7 @@ export function DateRangePicker({
             defaultMonth={startDate}
             selected={{ from: startDate, to: endDate }}
             onSelect={handleCalendarSelect}
-            numberOfMonths={2}
+            numberOfMonths={isDesktop ? 2 : 1}
             disabled={(date) => {
               const latestDate = getLatestAvailableDate()
               return date > latestDate || date < subDays(latestDate, MAX_DATE_RANGE_DAYS)

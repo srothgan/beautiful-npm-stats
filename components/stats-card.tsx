@@ -50,7 +50,7 @@ export function StatsCard({ stats, metadata, className, onRemove, dateRange }: S
         {/* Header */}
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <h2 className="text-lg font-bold tracking-tight">
+            <h2 className="text-lg font-bold tracking-tight truncate min-w-0">
               {stats.packageName}
             </h2>
             <div className="flex items-center gap-1">
