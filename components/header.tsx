@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { GitCompare, Info } from "lucide-react"
+import { GitCompare, Info, Coffee } from "lucide-react"
 import Image from "next/image"
 import { ThemeToggle } from "./theme-toggle"
 import { cn } from "@/lib/utils"
@@ -60,7 +60,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  "flex items-center gap-2 px-2 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                   isActive
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -72,7 +72,17 @@ export function Header() {
             )
           })}
 
-          <div className="ml-2 pl-2 border-l border-border/50">
+          <div className="ml-2 pl-2 border-l border-border/50 flex items-center gap-2">
+            <Link
+              href="https://buymeacoffee.com/srothgang"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-8 items-center justify-center gap-1.5 px-2.5 sm:px-3 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200"
+              aria-label="Buy me a coffee"
+            >
+              <Coffee className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs font-medium">Support</span>
+            </Link>
             <ThemeToggle />
           </div>
         </nav>
